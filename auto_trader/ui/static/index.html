@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIS 자동매매 대시보드</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- 헤더 -->
+    <header id="header">
+        <div class="header-left">
+            <h1>KIS 자동매매</h1>
+            <span id="mode-badge" class="badge">PAPER</span>
+            <span id="regime-badge" class="badge regime">분석 전</span>
+        </div>
+        <div class="header-right">
+            <span id="market-state" class="market-state">장 상태: -</span>
+            <span id="uptime">가동: -</span>
+            <button id="btn-pause" class="btn btn-warning" onclick="togglePause()">일시정지</button>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main>
+        <!-- 포트폴리오 요약 카드 -->
+        <section class="cards">
+            <div class="card">
+                <div class="card-label">총 평가액</div>
+                <div class="card-value" id="total-eval">-</div>
+            </div>
+            <div class="card">
+                <div class="card-label">일간 손익</div>
+                <div class="card-value" id="daily-pnl">-</div>
+            </div>
+            <div class="card">
+                <div class="card-label">총 수익률</div>
+                <div class="card-value" id="total-return">-</div>
+            </div>
+            <div class="card">
+                <div class="card-label">현금 비중</div>
+                <div class="card-value" id="cash-ratio">-</div>
+            </div>
+        </section>
+
+        <!-- 2열 레이아웃 -->
+        <div class="grid-2col">
+            <!-- 좌측: 보유 종목 + 주문 내역 -->
+            <div class="col">
+                <!-- 보유 종목 -->
+                <section class="panel">
+                    <h2>보유 종목 <span id="position-count" class="count-badge">0</span></h2>
+                    <table id="positions-table">
+                        <thead>
+                            <tr>
+                                <th>종목</th>
+                                <th>수량</th>
+                                <th>매입가</th>
+                                <th>현재가</th>
+                                <th>손익률</th>
+                                <th>매도</th>
+                            </tr>
+                        </thead>
+                        <tbody id="positions-body">
+                            <tr><td colspan="6" class="empty">보유 종목 없음</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <!-- 주문 내역 -->
+                <section class="panel">
+                    <h2>금일 주문 <span id="order-count" class="count-badge">0</span></h2>
+                    <table id="orders-table">
+                        <thead>
+                            <tr>
+                                <th>시간</th>
+                                <th>종목</th>
+                                <th>구분</th>
+                                <th>수량</th>
+                                <th>상태</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-body">
+                            <tr><td colspan="5" class="empty">주문 내역 없음</td></tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+
+            <!-- 우측: 매뉴얼 매매 + 레짐 + 알림 -->
+            <div class="col">
+                <!-- 매뉴얼 매매 -->
+                <section class="panel">
+                    <h2>매뉴얼 매매</h2>
+                    <div class="trade-form">
+                        <div class="form-row">
+                            <input type="text" id="trade-ticker" placeholder="종목코드 (예: 005930)" maxlength="6">
+                            <button class="btn btn-sm" onclick="lookupPrice()">조회</button>
+                        </div>
+                        <div id="price-info" class="price-info" style="display:none;"></div>
+                        <div class="form-row">
+                            <input type="number" id="trade-qty" placeholder="수량" min="1">
+                            <input type="number" id="trade-price" placeholder="가격 (0=시장가)" min="0">
+                        </div>
+                        <div class="form-row">
+                            <select id="trade-market">
+                                <option value="KRX">KRX (정규장)</option>
+                                <option value="NXT">NXT (프리마켓)</option>
+                            </select>
+                        </div>
+                        <div class="form-row btn-group">
+                            <button class="btn btn-buy" onclick="manualBuy()">매수</button>
+                            <button class="btn btn-sell" onclick="manualSell()">매도</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 마켓 레짐 -->
+                <section class="panel">
+                    <h2>마켓 레짐</h2>
+                    <div id="regime-detail">
+                        <div class="regime-current">
+                            <span id="regime-label">-</span>
+                            <span id="regime-confidence">신뢰도: -</span>
+                        </div>
+                        <div id="regime-scores" class="regime-scores"></div>
+                    </div>
+                </section>
+
+                <!-- 알림 로그 -->
+                <section class="panel">
+                    <h2>알림</h2>
+                    <div id="notifications" class="notifications-list"></div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/manual_trade.js"></script>
+</body>
+</html>

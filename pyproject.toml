@@ -1,0 +1,35 @@
+[project]
+name = "kis-auto-trader"
+version = "1.0.0"
+description = "KIS 국내 주식 자동매매 솔루션 — 마켓 레짐 분석 기반 자동 매매, 웹 대시보드, 텔레그램 봇"
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = [
+    "pandas>=2.1.0",
+    "pycryptodome>=3.20.0",
+    "pyyaml>=6.0.2",
+    "requests>=2.31.0",
+    "websockets>=12.0",
+]
+
+[project.optional-dependencies]
+ui = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.27.0",
+]
+telegram = [
+    "python-telegram-bot>=21.0",
+]
+all = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.27.0",
+    "python-telegram-bot>=21.0",
+]
+
+[project.scripts]
+kis-trader = "auto_trader.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

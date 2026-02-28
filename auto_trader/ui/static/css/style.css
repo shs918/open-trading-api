@@ -1,0 +1,328 @@
+/* KIS 자동매매 대시보드 스타일 */
+
+:root {
+    --bg-dark: #1a1a2e;
+    --bg-panel: #16213e;
+    --bg-card: #0f3460;
+    --text-primary: #e6e6e6;
+    --text-secondary: #a0a0b0;
+    --accent-blue: #4a9eff;
+    --accent-green: #00c853;
+    --accent-red: #ff3d3d;
+    --accent-yellow: #ffc107;
+    --accent-orange: #ff9800;
+    --border: #2a2a4a;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, 'Malgun Gothic', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* 헤더 */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 24px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-left h1 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+/* 배지 */
+.badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge[data-mode="live"] { background: var(--accent-red); color: #fff; }
+.badge[data-mode="paper"] { background: var(--accent-blue); color: #fff; }
+
+.badge.regime { background: var(--accent-yellow); color: #000; }
+.badge.regime[data-regime="strong_bull"],
+.badge.regime[data-regime="bull"] { background: var(--accent-red); color: #fff; }
+.badge.regime[data-regime="sideways"] { background: var(--accent-yellow); color: #000; }
+.badge.regime[data-regime="bear"],
+.badge.regime[data-regime="strong_bear"] { background: var(--accent-blue); color: #fff; }
+
+.count-badge {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 10px;
+    background: var(--accent-blue);
+    color: #fff;
+    font-size: 11px;
+    margin-left: 6px;
+}
+
+/* 버튼 */
+.btn {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+.btn:hover { opacity: 0.85; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-warning { background: var(--accent-yellow); color: #000; }
+.btn-buy { background: var(--accent-red); color: #fff; flex: 1; }
+.btn-sell { background: var(--accent-blue); color: #fff; flex: 1; }
+.btn-cancel { background: #666; color: #fff; padding: 2px 8px; font-size: 11px; }
+
+.btn-group {
+    display: flex;
+    gap: 8px;
+}
+
+/* 카드 */
+main {
+    padding: 16px 24px;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.card {
+    background: var(--bg-card);
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.card-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.card-value {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.card-value.positive { color: var(--accent-red); }
+.card-value.negative { color: var(--accent-blue); }
+
+/* 2열 그리드 */
+.grid-2col {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 16px;
+}
+
+/* 패널 */
+.panel {
+    background: var(--bg-panel);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+}
+
+.panel h2 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+/* 테이블 */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 8px 10px;
+    text-align: right;
+    font-size: 13px;
+}
+
+th {
+    color: var(--text-secondary);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+}
+
+td {
+    border-bottom: 1px solid #1a1a3a;
+}
+
+th:first-child, td:first-child {
+    text-align: left;
+}
+
+td.empty {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 24px;
+}
+
+tr:hover td {
+    background: rgba(74, 158, 255, 0.05);
+}
+
+/* 매뉴얼 매매 폼 */
+.trade-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-row {
+    display: flex;
+    gap: 8px;
+}
+
+input, select {
+    flex: 1;
+    padding: 8px 10px;
+    background: var(--bg-dark);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 13px;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+}
+
+.price-info {
+    padding: 8px;
+    background: var(--bg-dark);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* 레짐 상세 */
+.regime-current {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+#regime-label {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.regime-scores {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.score-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.score-label {
+    width: 100px;
+    color: var(--text-secondary);
+}
+
+.score-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--bg-dark);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.score-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+
+.score-fill.positive { background: var(--accent-red); }
+.score-fill.negative { background: var(--accent-blue); }
+.score-fill.neutral { background: var(--accent-yellow); }
+
+.score-value {
+    width: 40px;
+    text-align: right;
+    font-weight: 600;
+}
+
+/* 알림 */
+.notifications-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 6px 8px;
+    border-bottom: 1px solid #1a1a3a;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.notification-item .time {
+    color: var(--text-secondary);
+    margin-right: 8px;
+}
+
+.notification-item.trade { border-left: 3px solid var(--accent-green); }
+.notification-item.error { border-left: 3px solid var(--accent-red); }
+.notification-item.regime { border-left: 3px solid var(--accent-yellow); }
+
+/* 마켓 상태 */
+.market-state { font-weight: 500; }
+.market-state[data-state="regular_open"] { color: var(--accent-green); }
+.market-state[data-state="market_closed"] { color: var(--text-secondary); }
+
+/* 반응형 */
+@media (max-width: 900px) {
+    .cards { grid-template-columns: repeat(2, 1fr); }
+    .grid-2col { grid-template-columns: 1fr; }
+}

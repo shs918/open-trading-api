@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets & credentials
+kis_devlp.yaml
+auto_trader_config.yaml
+
+# Allow example config files
+# kis_devlp.example.yaml
+# auto_trader_config.example.yaml
+
+# Cache & data
+*.db
+*.sqlite3
+logs/
+
+# KIS token cache
+.KIS/

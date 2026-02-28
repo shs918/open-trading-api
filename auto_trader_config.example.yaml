@@ -1,0 +1,45 @@
+# KIS 자동매매 솔루션 설정 파일
+# 이 파일을 auto_trader_config.yaml로 복사하여 사용하세요.
+
+# 매매 모드: paper (모의투자) / live (실전투자)
+mode: paper
+
+# 대상 시장: krx (정규장), nxt (프리마켓)
+markets:
+  - krx
+  - nxt
+
+# 리스크 관리 파라미터
+risk:
+  max_loss_per_trade: 0.02        # 건당 최대 손실 2%
+  max_portfolio_loss: 0.05        # 포트폴리오 최대 손실 5%
+  max_single_stock_weight: 0.10   # 단일 종목 최대 비중 10%
+  trailing_stop_pct: 0.05         # 트레일링 스탑 5%
+  max_positions: 20               # 최대 보유 종목 수
+
+# 모의투자 → 실전투자 전환 조건
+paper_validation:
+  min_days: 30                    # 최소 운영 기간 (일)
+  min_profit_rate: 0.0            # 최소 수익률
+  max_mdd: 0.15                   # 최대 MDD 허용
+
+# 텔레그램 봇 설정
+telegram:
+  enabled: false
+  bot_token: ""                   # @BotFather에서 발급받은 토큰
+  chat_id: ""                     # 허용할 채팅방 ID
+
+# Web UI 대시보드 설정
+ui:
+  enabled: true
+  host: "0.0.0.0"
+  port: 8501
+
+# KIS API 설정 파일 경로 (kis_devlp.yaml)
+kis_config_path: ""               # 비어있으면 ~/KIS/config/kis_devlp.yaml 사용
+
+# 데이터 캐시 디렉토리
+cache_dir: ""                     # 비어있으면 ~/KIS/cache 사용
+
+# 로깅 레벨
+log_level: INFO
