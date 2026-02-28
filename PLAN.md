@@ -10,35 +10,45 @@
 - 정규장(KRX) + 프리마켓(NXT) 커버
 - 실전/모의/백테스트 3가지 모드 지원
 - 안전성 우선 설계
+- 실시간 모니터링 대시보드 (웹 UI)
+- 매뉴얼 매매 지원 (수동 매수/매도)
+- 텔레그램 봇을 통한 원격 모니터링 및 제어
 
 ---
 
 ## 2. 시스템 아키텍처
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    AutoTrader (메인 오케스트레이터)             │
-│  - 스케줄러 (장 시작/종료, 주기적 실행)                         │
-│  - 모드 관리 (실전/모의/백테스트)                               │
-│  - 로깅 & 알림                                               │
-├──────────┬──────────┬──────────┬─────────────────────────────┤
-│          │          │          │                             │
-│  ┌───────▼──────┐   │  ┌───────▼──────┐  ┌──────────────┐   │
-│  │ MarketRegime │   │  │  Strategy    │  │  Execution   │   │
-│  │  Analyzer    │   │  │  Engine      │  │  Engine      │   │
-│  │              │   │  │              │  │              │   │
-│  │ - 거시 지표  │──▶│  │ - 상승 전략  │─▶│ - 주문 실행  │   │
-│  │ - 미시 지표  │   │  │ - 횡보 전략  │  │ - 리스크관리 │   │
-│  │ - 복합 판단  │   │  │ - 하락 전략  │  │ - 포지션관리 │   │
-│  └───────▲──────┘   │  └───────▲──────┘  └──────▲───────┘   │
-│          │          │          │                │            │
-├──────────┼──────────┼──────────┼────────────────┼────────────┤
-│  ┌───────┴──────────┴──────────┴────────────────┴───────┐   │
-│  │              DataProvider (데이터 계층)                │   │
-│  │  - KIS API 래퍼 (REST + WebSocket)                    │   │
-│  │  - 데이터 캐싱 & 정규화                                │   │
-│  │  - 백테스트용 히스토리컬 데이터 관리                     │   │
-│  └──────────────────────────────────────────────────────┘   │
+                        ┌──────────────┐
+                        │  Telegram    │
+                        │  Bot         │
+                        │  (원격 제어)  │
+                        └──────┬───────┘
+                               │
+┌──────────────────────────────┼──────────────────────────────┐
+│              AutoTrader (메인 오케스트레이터)                  │
+│  - 스케줄러 (장 시작/종료, 주기적 실행)                        │
+│  - 모드 관리 (실전/모의/백테스트)                              │
+│  - 로깅 & 알림                                              │
+├──────┬──────────┬──────────┬───────────┬─────────────────────┤
+│      │          │          │           │                     │
+│ ┌────▼─────┐ ┌──▼───────┐ │ ┌─────────▼──┐ ┌────────────┐  │
+│ │ Market   │ │ Strategy │ │ │ Execution  │ │  Web UI    │  │
+│ │ Regime   │ │ Engine   │ │ │ Engine     │ │ Dashboard  │  │
+│ │ Analyzer │ │          │ │ │            │ │            │  │
+│ │          │─▶│ -상승전략│─▶│ - 자동주문 │ │ - 모니터링 │  │
+│ │ -거시지표│ │ -횡보전략│ │ │ - 매뉴얼   │ │ - 매뉴얼   │  │
+│ │ -미시지표│ │ -하락전략│ │ │   매매     │ │   매매입력 │  │
+│ │ -복합판단│ │          │ │ │ - 리스크   │ │ - 차트/로그│  │
+│ └────▲─────┘ └──▲───────┘ │ └─────▲─────┘ └────────────┘  │
+│      │          │          │       │                        │
+├──────┼──────────┼──────────┼───────┼────────────────────────┤
+│  ┌───┴──────────┴──────────┴───────┴───────────────────┐    │
+│  │              DataProvider (데이터 계층)               │    │
+│  │  - KIS API 래퍼 (REST + WebSocket)                   │    │
+│  │  - 데이터 캐싱 & 정규화                               │    │
+│  │  - 백테스트용 히스토리컬 데이터 관리                    │    │
+│  └─────────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -76,7 +86,7 @@ auto_trader/
 │
 ├── execution/                   # 주문 실행
 │   ├── __init__.py
-│   ├── order_manager.py         # 주문 생성/실행/취소
+│   ├── order_manager.py         # 주문 생성/실행/취소 (자동 + 매뉴얼)
 │   ├── position_manager.py      # 포지션 관리 (보유/비중)
 │   └── risk_manager.py          # 리스크 관리 (손절/익절/한도)
 │
@@ -86,11 +96,31 @@ auto_trader/
 │   ├── data_loader.py           # 과거 데이터 로딩/저장
 │   └── performance.py           # 성과 분석 (수익률, MDD, 샤프 등)
 │
+├── ui/                          # 웹 대시보드 (FastAPI + 프론트엔드)
+│   ├── __init__.py
+│   ├── app.py                   # FastAPI 앱 진입점
+│   ├── api_routes.py            # REST API 엔드포인트
+│   ├── websocket_handler.py     # 실시간 데이터 푸시 (WebSocket)
+│   └── static/                  # 프론트엔드 정적 파일
+│       ├── index.html           # 대시보드 메인 페이지
+│       ├── css/
+│       │   └── style.css
+│       └── js/
+│           ├── dashboard.js     # 대시보드 로직
+│           ├── chart.js         # 차트 렌더링
+│           └── manual_trade.js  # 매뉴얼 매매 UI
+│
+├── telegram/                    # 텔레그램 봇
+│   ├── __init__.py
+│   ├── bot.py                   # 봇 메인 (핸들러 등록, 실행)
+│   ├── handlers.py              # 명령어/콜백 핸들러
+│   └── formatters.py            # 메시지 포맷팅 (마크다운)
+│
 └── utils/                       # 유틸리티
     ├── __init__.py
     ├── logger.py                # 로깅 설정
     ├── scheduler.py             # 스케줄링 (장 시작/종료 연동)
-    └── notifier.py              # 알림 (콘솔 로그)
+    └── notifier.py              # 알림 (콘솔 + 텔레그램 연동)
 ```
 
 ---
@@ -354,6 +384,145 @@ class MarketSession(Enum):
 
 NXT 전용 API 활용: `asking_price_nxt`, `ccnl_nxt`, `market_status_nxt`, `exp_ccnl_nxt`
 
+### 4.8 Web UI Dashboard — 조회 및 모니터링
+
+FastAPI 백엔드 + 순수 HTML/JS 프론트엔드 구성. 별도 프레임워크(React 등) 없이 경량 구현.
+
+**백엔드 (FastAPI):**
+
+```python
+# api_routes.py — REST 엔드포인트
+GET  /api/status              # 시스템 상태 (모드, 레짐, 가동시간)
+GET  /api/regime              # 현재 마켓 레짐 + 각 지표 점수
+GET  /api/portfolio           # 포트폴리오 현황 (보유종목, 평가손익, 현금비중)
+GET  /api/positions           # 개별 포지션 상세
+GET  /api/orders              # 주문 내역 (체결/미체결)
+GET  /api/orders/history      # 과거 주문 이력
+GET  /api/performance         # 수익률, MDD, 일별 손익 추이
+GET  /api/market/{ticker}     # 종목 시세 조회
+GET  /api/index/{code}        # 지수 시세 조회
+
+# 매뉴얼 매매 엔드포인트
+POST /api/trade/buy           # 수동 매수 주문
+POST /api/trade/sell          # 수동 매도 주문
+POST /api/trade/cancel        # 주문 취소
+
+# 시스템 제어
+POST /api/control/mode        # 모드 전환 (실전/모의)
+POST /api/control/pause       # 자동매매 일시정지
+POST /api/control/resume      # 자동매매 재개
+```
+
+```python
+# websocket_handler.py — 실시간 푸시
+WS   /ws/dashboard            # 실시간 대시보드 데이터 (1초 간격)
+                              # - 포트폴리오 평가액, 일간 손익
+                              # - 현재 레짐, 지표 변동
+                              # - 체결 알림
+```
+
+**프론트엔드 화면 구성:**
+
+| 영역 | 내용 |
+|------|------|
+| **헤더** | 시스템 상태 (모드, 레짐, 가동시간), 일시정지/재개 버튼 |
+| **포트폴리오 요약** | 총 평가액, 일간 손익(금액/%), 현금비중, 총 수익률 |
+| **마켓 레짐 패널** | 현재 레짐 (색상 표시), 각 지표별 점수 게이지 |
+| **보유 종목 테이블** | 종목명, 수량, 매입가, 현재가, 손익률, 매도 버튼 |
+| **매뉴얼 매매 패널** | 종목 검색, 매수/매도 폼 (수량, 가격, 주문유형) |
+| **주문 내역** | 미체결 주문 (취소 버튼), 당일 체결 내역 |
+| **차트** | 포트폴리오 일별 수익률 추이 (lightweight-charts) |
+| **로그** | 시스템 로그 실시간 스트림 (최근 100건) |
+
+### 4.9 매뉴얼 매매 — 수동 매수/매도
+
+자동매매와 별도로, 사용자가 직접 주문을 넣을 수 있는 기능.
+
+```python
+class ManualTradeRequest:
+    ticker: str              # 종목코드
+    side: str                # "buy" | "sell"
+    quantity: int            # 주문 수량
+    price: int               # 주문 가격 (0이면 시장가)
+    order_type: str          # "limit" | "market"
+    market: str              # "krx" | "nxt"
+```
+
+**매뉴얼 매매 규칙:**
+- 매뉴얼 주문도 `RiskManager`의 리스크 체크를 통과해야 실행
+- 매뉴얼로 매수한 종목은 자동매매 대상에서 제외 (또는 사용자 설정에 따라 포함)
+- 매뉴얼 주문은 별도 태그로 기록하여 자동/수동 성과를 분리 추적
+- Web UI 및 텔레그램 봇 양쪽에서 모두 매뉴얼 주문 가능
+
+**진입점:**
+1. **Web UI**: 매뉴얼 매매 패널에서 종목 검색 → 수량/가격 입력 → 주문
+2. **텔레그램**: `/buy 005930 10 72000` (삼성전자 10주 72,000원 매수)
+
+### 4.10 Telegram Bot — 원격 커뮤니케이션
+
+`python-telegram-bot` 라이브러리 기반. 원격에서 시스템 모니터링 및 제어.
+
+**명령어 체계:**
+
+| 명령어 | 설명 | 예시 |
+|--------|------|------|
+| `/status` | 시스템 상태 조회 | 모드, 레짐, 가동시간, 포트폴리오 요약 |
+| `/portfolio` | 포트폴리오 상세 | 보유종목, 평가손익, 현금비중 |
+| `/regime` | 마켓 레짐 상세 | 현재 레짐 + 각 지표 점수 |
+| `/positions` | 보유 종목 리스트 | 종목명, 수량, 손익률 |
+| `/orders` | 미체결 주문 리스트 | 주문번호, 종목, 가격, 수량 |
+| `/performance` | 성과 요약 | 총 수익률, MDD, 금일 손익 |
+| `/price {종목}` | 종목 시세 조회 | `/price 005930` → 삼성전자 현재가 |
+| `/buy {종목} {수량} {가격}` | 매뉴얼 매수 | `/buy 005930 10 72000` |
+| `/sell {종목} {수량} {가격}` | 매뉴얼 매도 | `/sell 005930 10 75000` |
+| `/cancel {주문번호}` | 주문 취소 | `/cancel 0012345` |
+| `/pause` | 자동매매 일시정지 | — |
+| `/resume` | 자동매매 재개 | — |
+| `/mode {모드}` | 모드 전환 | `/mode paper`, `/mode live` |
+| `/help` | 명령어 도움말 | — |
+
+**자동 알림 (푸시 메시지):**
+
+| 이벤트 | 알림 내용 |
+|--------|----------|
+| 레짐 변경 | "레짐 변경: 상승 → 횡보 (신뢰도 78%)" |
+| 자동 매수 체결 | "매수 체결: 삼성전자(005930) 10주 @ 72,000원" |
+| 자동 매도 체결 | "매도 체결: SK하이닉스(000660) 5주 @ 185,000원 (+3.2%)" |
+| 손절 발동 | "손절: LG에너지솔루션(373220) 3주 @ 380,000원 (-2.0%)" |
+| 일간 리포트 | 매일 장 마감 후: 일간 손익, 포트폴리오 현황, 레짐 요약 |
+| 시스템 오류 | API 오류, 인증 만료, 주문 실패 등 |
+
+**보안:**
+- `telegram_chat_id` 설정: 허용된 채팅방에서만 명령 수락
+- 매매 명령(`/buy`, `/sell`, `/mode live`)은 확인 단계 추가 (인라인 버튼)
+- 봇 토큰은 `kis_devlp.yaml`에 저장 (코드에 하드코딩 금지)
+
+```python
+# bot.py 핵심 구조
+class TelegramBot:
+    def __init__(self, token: str, chat_id: str, trader: AutoTrader): ...
+
+    async def start(self) -> None:
+        """봇 시작 (polling 방식)"""
+
+    async def send_alert(self, message: str) -> None:
+        """자동 알림 발송"""
+
+    async def send_daily_report(self) -> None:
+        """장 마감 후 일간 리포트 발송"""
+```
+
+```python
+# handlers.py — 명령어 핸들러
+async def cmd_status(update, context) -> None: ...
+async def cmd_portfolio(update, context) -> None: ...
+async def cmd_buy(update, context) -> None: ...
+async def cmd_sell(update, context) -> None: ...
+# 매매 명령 확인 콜백
+async def confirm_trade(update, context) -> None: ...
+async def cancel_trade(update, context) -> None: ...
+```
+
 ---
 
 ## 5. 구현 순서 (Phase별)
@@ -380,7 +549,7 @@ NXT 전용 API 활용: `asking_price_nxt`, `ccnl_nxt`, `market_status_nxt`, `exp
 15. `auto_trader/strategy/bear_strategy.py` — 하락장 전략
 
 ### Phase 4: 실행 엔진
-16. `auto_trader/execution/order_manager.py` — 주문 관리
+16. `auto_trader/execution/order_manager.py` — 주문 관리 (자동 + 매뉴얼)
 17. `auto_trader/execution/position_manager.py` — 포지션 관리
 18. `auto_trader/execution/risk_manager.py` — 리스크 관리
 
@@ -391,8 +560,19 @@ NXT 전용 API 활용: `asking_price_nxt`, `ccnl_nxt`, `market_status_nxt`, `exp
 
 ### Phase 6: 통합 & 오케스트레이션
 22. `auto_trader/utils/scheduler.py` — 장 시간 스케줄링
-23. `auto_trader/utils/notifier.py` — 알림
+23. `auto_trader/utils/notifier.py` — 알림 (콘솔 + 텔레그램 연동)
 24. `auto_trader/main.py` — 메인 진입점, CLI
+
+### Phase 7: Web UI 대시보드
+25. `auto_trader/ui/app.py` — FastAPI 앱 설정
+26. `auto_trader/ui/api_routes.py` — REST API 엔드포인트 (조회 + 매뉴얼 매매)
+27. `auto_trader/ui/websocket_handler.py` — 실시간 데이터 푸시
+28. `auto_trader/ui/static/` — 프론트엔드 (HTML/CSS/JS, lightweight-charts)
+
+### Phase 8: 텔레그램 봇
+29. `auto_trader/telegram/bot.py` — 봇 메인 (핸들러 등록, 실행)
+30. `auto_trader/telegram/handlers.py` — 명령어/콜백 핸들러
+31. `auto_trader/telegram/formatters.py` — 메시지 포맷팅
 
 ---
 
@@ -408,13 +588,17 @@ NXT 전용 API 활용: `asking_price_nxt`, `ccnl_nxt`, `market_status_nxt`, `exp
 
 ## 7. 의존성
 
-기존 `pyproject.toml` 의존성으로 충분:
+**기존 (`pyproject.toml` 이미 포함):**
 - `pandas` — 데이터 처리
 - `requests` — REST API 호출
 - `websockets` — 실시간 데이터
 - `pyyaml` — 설정 파일
 - `pycryptodome` — WebSocket 암호화
 
-추가 필요 시:
+**추가 필요:**
+- `fastapi` — Web UI 백엔드 서버
+- `uvicorn` — ASGI 서버 (FastAPI 실행)
+- `python-telegram-bot` — 텔레그램 봇 프레임워크
 - `schedule` — 스케줄링 (또는 표준 라이브러리 `sched`/`threading.Timer` 활용)
 - `sqlite3` (표준 라이브러리) — 백테스트 데이터 캐싱
+- `lightweight-charts` (JS, CDN) — 프론트엔드 차트 라이브러리
